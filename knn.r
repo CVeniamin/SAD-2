@@ -1,20 +1,52 @@
-library(knn)
 library(class)
 library(MASS)
-library(lubridate)
 library(unbalanced)
+library(lubridate)
 data(crabs, package = "MASS")
 noshows = read.csv("noshows.csv")
-levels(noshows$No.show) = 0:1
-output = noshows$No.show
-n = ncol(noshows)
-input = noshows[ ,-n] #Without the No.show
-data = ubUnder(X=input, Y= output) 
-newData = cbind(data$X, data$Y)
-newData$AppointmentDay = wday(as.Date(newData$AppointmentDay), label = T)
-levels(newData$AppointmentDay) = 0:6
-iidx = sample(1:dim(newData)[1], 100)
-noShowsTrain = newData[-iidx, ]
-noShowsTest = newData[iidx, ]
-noShowsModel = knn(noShowsTrain[, -n], noShowsTest[,-n], noShowsTrain[,n], 1)
-table(noShowsModel, noShowsTest[,n])
+
+#import function from pre-process file
+source("./pre-process.r")
+
+#applying knn to crabs
+shuffleData = function(d){
+  shuffledData<-d[sample(nrow(d)),]
+  shuffledData<-shuffledData[sample(nrow(shuffledData)),]
+  return(shuffledData)
+}
+
+applyKNN = function(data, testSize = 30, k = 4,  shuffle = TRUE){
+  set.seed(42)
+  sample_size = 0
+  if(shuffle){
+    sample_size = sample(1:dim(shuffleData(data))[1], testSize)
+  }else{
+    sample_size = sample(1:dim(data)[1], testSize)
+  }
+  n = ncol(data)
+  train = data[-sample_size, -n]
+  test = data[sample_size, -n]
+  
+  trainTarget = data[-sample_size, n]
+  testTarget = data[sample_size, n]
+  
+  model = knn(train, test, cl=trainTarget, k)
+  table(model, testTarget)
+}
+
+#normalize crabs data set including sex
+preprocessed_crabs = preprocessCrabs(crabs)
+normalized_crabs = cbind(as.data.frame(lapply(preprocessed_crabs[,c(2,3,4,5,6)], normalize)), sp = preprocessed_crabs[,1])
+summary(normalized_crabs)
+
+#apply knn to crabs
+applyKNN(normalized_crabs, 45, k = 2, shuffle = T)
+
+
+#normalize noshows dataset only (scheduledday, appointment, age, neighbourhood) 
+preprocessed_noshows = preprocessNoshows(noshows)
+normalized_noshows = cbind(as.data.frame(lapply(preprocessed_noshows[,c(1,2,3,4,5)], normalize)), preprocessed_noshows[,c(6,7,8,9,10,11,12)])
+summary(normalized_noshows)
+
+#apply knn to noshows
+applyKNN(normalized_noshows, 400, k = 4, shuffle = T)
