@@ -2,21 +2,26 @@ library(class)
 library(MASS)
 library(unbalanced)
 library(lubridate)
+library(caret) 
+
 data(crabs, package = "MASS")
 noshows = read.csv("noshows.csv")
 
 #import function from pre-process file
 source("./pre-process.r")
-
+set.seed(4232)
 #applying knn to crabs
 shuffleData = function(d){
+  set.seed(4232)
   shuffledData<-d[sample(nrow(d)),]
+  summary(shuffledData)
   shuffledData<-shuffledData[sample(nrow(shuffledData)),]
   return(shuffledData)
 }
 
+
 applyKNN = function(data, testSize = 30, k = 4,  shuffle = TRUE){
-  set.seed(42)
+  set.seed(4232)
   sample_size = 0
   if(shuffle){
     sample_size = sample(1:dim(shuffleData(data))[1], testSize)
@@ -31,7 +36,9 @@ applyKNN = function(data, testSize = 30, k = 4,  shuffle = TRUE){
   testTarget = data[sample_size, n]
   
   model = knn(train, test, cl=trainTarget, k)
+  #res = table(model, testTarget)
   table(model, testTarget)
+  #confusionMatrix(res)
 }
 
 #normalize crabs data set including sex
@@ -40,13 +47,13 @@ normalized_crabs = cbind(as.data.frame(lapply(preprocessed_crabs[,c(2,3,4,5,6)],
 summary(normalized_crabs)
 
 #apply knn to crabs
-applyKNN(normalized_crabs, 45, k = 2, shuffle = T)
+applyKNN(normalized_crabs, 20, k = 3, shuffle = T)
 
 
 #normalize noshows dataset only (scheduledday, appointment, age, neighbourhood) 
-preprocessed_noshows = preprocessNoshows(noshows)
+preprocessed_noshows = preprocessNoshows(noshows, 47)
 normalized_noshows = cbind(as.data.frame(lapply(preprocessed_noshows[,c(1,2,3,4,5)], normalize)), preprocessed_noshows[,c(6,7,8,9,10,11,12)])
 summary(normalized_noshows)
 
 #apply knn to noshows
-applyKNN(normalized_noshows, 400, k = 4, shuffle = T)
+applyKNN(normalized_noshows, 500, k = 11, shuffle = T)

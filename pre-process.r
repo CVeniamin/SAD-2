@@ -22,12 +22,17 @@ normalize = function(x){
 #normalized_crabs = as.data.frame(lapply(preprocessed_crabs[,c(1,2,3,4,5,6)], normalize))
 #summary(normalized_crabs)
 
-preprocessNoshows = function(d){
+preprocessNoshows = function(d, percentage, overSample=F){
+  set.seed(4232)
   levels(d$No.show) = 0:1
   output = d$No.show
   n = ncol(d)
   input = d[,-c(1,2,n)] #removed PatientID, AppointmentID and noshow columns
-  data = ubUnder(X=input, Y= output)
+  if(overSample){
+    data = ubOver(X=input, Y= output)
+  }else{
+    data = ubUnder(X=input, Y= output, perc = percentage, method = "percPos")  
+  }
   
   #data$Y represents noshowing yes/no
   newData = cbind(data$X, ShowUp = data$Y)
