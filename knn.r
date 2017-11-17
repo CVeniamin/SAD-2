@@ -20,25 +20,28 @@ shuffleData = function(d){
 }
 
 
-applyKNN = function(data, testSize = 30, k = 4,  shuffle = TRUE){
+applyKNN = function(data, testPercentage = 0.3, k = 3,  shuffle = TRUE){
   set.seed(4232)
   sample_size = 0
+  size = nrow(data) * testPercentage
   if(shuffle){
-    sample_size = sample(1:dim(shuffleData(data))[1], testSize)
+    sample_size = sample(1:dim(shuffleData(data))[1], size)
   }else{
-    sample_size = sample(1:dim(data)[1], testSize)
+    sample_size = sample(1:dim(data)[1], size)
   }
   n = ncol(data)
-  train = data[-sample_size, -n]
-  test = data[sample_size, -n]
   
-  trainTarget = data[-sample_size, n]
-  testTarget = data[sample_size, n]
+  if(testPercentage <= 0.5 & testPercentage > 0){
+    train = data[-sample_size, -n]
+    test = data[sample_size, -n]
+    trainTarget = data[-sample_size, n]
+    testTarget = data[sample_size, n]
+    model = knn(train, test, cl=trainTarget, k)
+    res = table(model, testTarget)
+    #table(model, testTarget)
+    confusionMatrix(res)
+  }
   
-  model = knn(train, test, cl=trainTarget, k)
-  #res = table(model, testTarget)
-  table(model, testTarget)
-  #confusionMatrix(res)
 }
 
 #normalize crabs data set including sex
@@ -47,7 +50,7 @@ normalized_crabs = cbind(as.data.frame(lapply(preprocessed_crabs[,c(2,3,4,5,6)],
 summary(normalized_crabs)
 
 #apply knn to crabs
-applyKNN(normalized_crabs, 20, k = 3, shuffle = T)
+applyKNN(normalized_crabs, 0.1, k = 3, shuffle = T)
 
 
 #normalize noshows dataset only (scheduledday, appointment, age, neighbourhood) 
@@ -56,4 +59,4 @@ normalized_noshows = cbind(as.data.frame(lapply(preprocessed_noshows[,c(1,2,3,4,
 summary(normalized_noshows)
 
 #apply knn to noshows
-applyKNN(normalized_noshows, 500, k = 11, shuffle = T)
+applyKNN(normalized_noshows, 0.3, k = 11, shuffle = T)
