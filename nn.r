@@ -5,23 +5,21 @@ library(lubridate)
 library(caret) 
 library(nnet)
 
-# -----------------------------NO-SHOWS--------------------------------------- #
-noshows = read.csv("noshows.csv")
-
 #import function from pre-process file
 source("./pre-process.r")
-
-preprocessed_noshows <- preprocessNoshows(noshows, 50)
-
-
-#normalize noshows dataset only (scheduledday, appointment, age, neighbourhood) 
-normalized_noshows <- cbind(as.data.frame(lapply(preprocessed_noshows[,c(1,2,3,4,5)], normalize)), preprocessed_noshows[,c(6,7,8,9,10,11,12)])
 
 shuffleData = function(d){
   shuffledData<-d[sample(nrow(d)),]
   shuffledData<-shuffledData[sample(nrow(shuffledData)),]
   return(shuffledData)
 }
+
+# -----------------------------NO-SHOWS--------------------------------------- #
+noshows = read.csv("noshows.csv")
+preprocessed_noshows <- preprocessNoshows(noshows, 50)
+
+#normalize noshows dataset only (scheduledday, appointment, age, neighbourhood) 
+normalized_noshows <- cbind(as.data.frame(lapply(preprocessed_noshows[,c(1,2,3,4,5)], normalize)), preprocessed_noshows[,c(6,7,8,9,10,11,12)])
 
 #DIVIDE AND SHUFFLE dataset into a training set of 90% and 10% test set -----**
 data <- normalized_noshows
@@ -63,7 +61,7 @@ preprocessed_crabs <- preprocessCrabs(crabs)
 normalized_crabs = cbind(as.data.frame(lapply(preprocessed_crabs[,c(2,3,4,5,6)], normalize)), sp = preprocessed_crabs[,1])
 
 #DIVIDE dataset into a training set of 75% and 25% test set -----**
-testSize_crabs <- nrow(normalized_crabs) * 0.25
+testSize_crabs <- nrow(normalized_crabs) * 0.4
 
 #random seed 42 = meaning of life
 set.seed(42)
@@ -76,7 +74,7 @@ testCrabs = normalized_crabs[sample_size_crab, ]
 resultsCrab = testCrabs[, ncol(testCrabs)]
 
 #feed NN
-neuralnet.crabs = nnet(sp ~., data = trainCrabs, size = 1, decay = 0, maxit = 220)
+neuralnet.crabs = nnet(sp ~., data = trainCrabs, size = 1, decay = 5e-4, maxit = 200)
 
 pred_crabs = predict(neuralnet.crabs, testCrabs, type = "class")
 
