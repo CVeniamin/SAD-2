@@ -32,14 +32,17 @@ if(shuffle){
 }else{
   sample_size = sample(1:dim(data)[1], testSize)
 }
+train = data[-sample_size]
 n = ncol(data)
-train = data[-sample_size, -n]
-test = data[sample_size, -n]
+proto_train = data[-sample_size, -(n+1)]
+proto_test = data[sample_size, -(n+1)]
 
+results70 <- train[,ncol(train)]
+results30 <- test[,ncol(test)]
 
+nnetwork.nn2 <- nnet(proto_train[,n] ~ ., data = proto_train, size=9, decay = 5e-4, maxit = 200)
+prediction <- predict(nnetwork.nn2, proto_test, type = "class")
 
-
-idxTrain <- sample(nrow(normalized_noshows), as.integer(nrow(normalized_noshows)*0.7))
-idxTest <- which(! 1:nrow(normalized_noshows) %in% idxTrain)
-
-test = normalized_noshow[,-1]s
+table(prediction, results30)
+                 
+                 
