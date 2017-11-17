@@ -51,6 +51,14 @@ preprocessNoshows = function(d, percentage, overSample=F){
   return(newData)
 }
 
+#applying knn to crabs
+shuffleData = function(d){
+  set.seed(4232)
+  shuffledData<-d[sample(nrow(d)),]
+  shuffledData<-shuffledData[sample(nrow(shuffledData)),]
+  return(shuffledData)
+}
+
 
 #Usage example
 #preprocessed_noshows = preprocessNoshows(noshows)
