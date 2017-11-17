@@ -10,7 +10,7 @@ noshows = read.csv("noshows.csv")
 #import function from pre-process file
 source("./pre-process.r")
 
-preprocessed_noshows <- preprocessNoshows(noshows)
+preprocessed_noshows <- preprocessNoshows(noshows, 50)
 #normalize noshows dataset only (scheduledday, appointment, age, neighbourhood) 
 normalized_noshows <- cbind(as.data.frame(lapply(preprocessed_noshows[,c(1,2,3,4,5)], normalize)), preprocessed_noshows[,c(6,7,8,9,10,11,12)])
 
@@ -33,8 +33,9 @@ if(shuffle){
 }
 train = data[-sample_size]
 n = ncol(data)
-proto_train = data[-sample_size, -(n+1)]
-proto_test = data[sample_size, -(n+1)]
+print(n)
+proto_train = data[-sample_size, ]
+proto_test = data[sample_size, ]
 
 results90 <- train[,ncol(train)]
 results10 <- proto_test[,ncol(proto_test)]
